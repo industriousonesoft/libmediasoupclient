@@ -3,7 +3,7 @@
 
 #include "PeerConnection.hpp"
 #include "sdp/RemoteSdp.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <api/media_stream_interface.h>    // webrtc::MediaStreamTrackInterface
 #include <api/peer_connection_interface.h> // webrtc::PeerConnectionInterface
 #include <api/rtp_parameters.h>            // webrtc::RtpEncodingParameters

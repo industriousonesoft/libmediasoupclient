@@ -2,7 +2,7 @@
 #define MSC_REMOTESDP_HPP
 
 #include "sdp/MediaSection.hpp"
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
 

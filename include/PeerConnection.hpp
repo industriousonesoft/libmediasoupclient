@@ -1,7 +1,7 @@
 #ifndef MSC_PEERCONNECTION_HPP
 #define MSC_PEERCONNECTION_HPP
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>			   // nlohmann::json
 #include <api/peer_connection_interface.h> // webrtc::PeerConnectionInterface
 #include <future>                          // std::promise, std::future
 #include <memory>                          // std::unique_ptr

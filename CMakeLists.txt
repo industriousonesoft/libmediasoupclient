@@ -25,6 +25,12 @@ option(MEDIASOUPCLIENT_LOG_DEV     "Enable MSC_LOG_DEV (See Logger.hpp)" OFF)
 # Project configuration.
 set(LIBWEBRTC_INCLUDE_PATH "" CACHE STRING "libwebrtc include path")
 set(LIBWEBRTC_BINARY_PATH "" CACHE STRING "libwebrtc binary path")
+#确保nlohmann::json的版本一致
+set(LIBJSON_INCLUDE_PATH "" CACHE STRING "nlohmann json include path")
+
+if(NOT LIBJSON_INCLUDE_PATH)
+	message(FATAL_ERROR "LIBJSON_INCLUDE_PATH not provided")
+endif()
 
 if(NOT LIBWEBRTC_INCLUDE_PATH)
 	message(FATAL_ERROR "LIBWEBRTC_INCLUDE_PATH not provided")
@@ -40,6 +46,7 @@ message(STATUS "MEDIASOUPCLIENT_LOG_TRACE   : " ${MEDIASOUPCLIENT_LOG_TRACE})
 message(STATUS "MEDIASOUPCLIENT_LOG_DEV     : " ${MEDIASOUPCLIENT_LOG_DEV})
 message(STATUS "LIBWEBRTC_INCLUDE_PATH      : " ${LIBWEBRTC_INCLUDE_PATH})
 message(STATUS "LIBWEBRTC_BINARY_PATH       : " ${LIBWEBRTC_BINARY_PATH})
+message(STATUS "LIBJSON_INCLUDE_PATH       	: " ${LIBJSON_INCLUDE_PATH})
 message("")
 
 # GCC >= 4.9 is required due to std::regex use.
@@ -125,6 +132,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	"${PROJECT_SOURCE_DIR}/deps/libsdptransform/include"
 	"${LIBWEBRTC_INCLUDE_PATH}"
 	"${LIBWEBRTC_INCLUDE_PATH}/third_party/abseil-cpp"
+	"${LIBJSON_INCLUDE_PATH}"
 )
 
 # Public (interface) dependencies.

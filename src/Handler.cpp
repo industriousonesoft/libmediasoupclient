@@ -194,7 +194,7 @@ namespace mediasoupclient
 		if (!transceiver)
 			MSC_THROW_ERROR("error creating transceiver");
 
-		transceiver->SetDirection(webrtc::RtpTransceiverDirection::kSendOnly);
+		transceiver->SetDirectionWithError(webrtc::RtpTransceiverDirection::kSendOnly);
 
 		std::string offer;
 		std::string localId;
@@ -224,7 +224,7 @@ namespace mediasoupclient
 		catch (std::exception& error)
 		{
 			// Panic here. Try to undo things.
-			transceiver->SetDirection(webrtc::RtpTransceiverDirection::kInactive);
+			transceiver->SetDirectionWithError(webrtc::RtpTransceiverDirection::kInactive);
 			transceiver->sender()->SetTrack(nullptr);
 
 			throw;

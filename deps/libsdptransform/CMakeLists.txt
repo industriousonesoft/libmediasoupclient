@@ -9,6 +9,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # For CMake < 3.1.
 add_compile_options(-std=c++11)
 
+#Project Configuation
+#确保nlohmann::json的版本一致
+set(LIBJSON_INCLUDE_PATH "" CACHE STRING "nlohmann json include path")
+
+if(NOT LIBJSON_INCLUDE_PATH)
+	message(FATAL_ERROR "LIBJSON_INCLUDE_PATH not provided")
+endif()
+
 subdirs(test readme-helper)
 
 include_directories(${sdptransform_SOURCE_DIR}/include)
@@ -23,10 +31,14 @@ set(
 set(
 	HEADER_FILES
 	include/sdptransform.hpp
-	include/json.hpp
+	#deps/json/include/nlohmann/json.hpp #改为LIBJSON_INCLUDE_PATH
 )
 
 add_library(sdptransform STATIC ${SOURCE_FILES} ${HEADER_FILES})
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+ 	"${LIBJSON_INCLUDE_PATH}"
+ )
 
 install(TARGETS sdptransform DESTINATION lib)
 install(FILES ${HEADER_FILES} DESTINATION include/sdptransform)

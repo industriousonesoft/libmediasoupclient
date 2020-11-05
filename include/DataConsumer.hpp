@@ -1,7 +1,7 @@
 #ifndef MSC_DATACONSUMER_HPP
 #define MSC_DATACONSUMER_HPP
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 #include <api/data_channel_interface.h>
 #include <string>
 
