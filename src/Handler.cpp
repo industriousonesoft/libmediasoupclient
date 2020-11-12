@@ -176,28 +176,30 @@ namespace mediasoupclient
 		if (encodings && encodings->size() > 1)
 		{
 			uint8_t idx = 0;
+			//编码参数集合按顺序编号，从0开始
 			for (webrtc::RtpEncodingParameters& encoding : *encodings)
 			{
 				encoding.rid = std::string("r").append(std::to_string(idx++));
 			}
 		}
-
+		//获得下一个media section idx
 		const Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = this->remoteSdp->GetNextMediaSectionIdx();
 
 		webrtc::RtpTransceiverInit transceiverInit;
 
 		if (encodings && !encodings->empty())
 			transceiverInit.send_encodings = *encodings;
-
+		
 		webrtc::RtpTransceiverInterface* transceiver = this->pc->AddTransceiver(track, transceiverInit);
 
 		if (!transceiver)
 			MSC_THROW_ERROR("error creating transceiver");
-
+		//send端的transceiver只发送不接收
 		transceiver->SetDirectionWithError(webrtc::RtpTransceiverDirection::kSendOnly);
 
 		std::string offer;
 		std::string localId;
+		//指定track类型对应的RTP parameters，包括rtp协议簇、编码参数集
 		json& sendingRtpParameters = this->sendingRtpParametersByKind[track->kind()];
 
 		try
@@ -208,7 +210,9 @@ namespace mediasoupclient
 			auto localSdpObject = sdptransform::parse(offer);
 
 			// Transport is not ready.
+			//由于在SFU模式下，远端SFU服务器将自己伪装成peer。所以相对于当前的数据发送端而言，远端服务器的角色则是数据接收端client，因此设置发送端的角色则是server(音视频数据的server)
 			if (!this->transportReady)
+				//sserver表示是DTLS连接的被动接收端，反正client端则是DTLS连接的主动建立端
 				this->SetupTransport("server", localSdpObject);
 
 			MSC_DEBUG("calling pc->SetLocalDescription():\n%s", offer.c_str());
@@ -231,8 +235,10 @@ namespace mediasoupclient
 		}
 
 		auto localSdp       = this->pc->GetLocalDescription();
+		//FIXME:SDP转ORTC？？
 		auto localSdpObject = sdptransform::parse(localSdp);
 
+		//media流参数合集
 		json& offerMediaObject = localSdpObject["media"][mediaSectionIdx.idx];
 
 		// Set RTCP CNAME.
@@ -269,10 +275,13 @@ namespace mediasoupclient
 
 		// If VP8 and there is effective simulcast, add scalabilityMode to each encoding.
 		auto mimeType = sendingRtpParameters["codecs"][0]["mimeType"].get<std::string>();
-
+		//将mimeType按逐个字符改为小写
 		std::transform(mimeType.begin(), mimeType.end(), mimeType.begin(), ::tolower);
 
 		// clang-format off
+		//encodings的数量大于1意味着启用了simulcast
+		//simulcast模式下，将vp8和h264编码改用svc模式，因为二者暂不支持simulcast(似乎最新的webrtc版本已经支持:https://blog.csdn.net/sandfox/article/details/84315457)，
+		//且vp8只支持时间可适性（temporal scalability），不支持空间可适性（spatial scalability），所以使用S1T3(应该是等价于L1T3)，详细参见:https://www.w3.org/TR/webrtc-svc/
 		if (
 			sendingRtpParameters["encodings"].size() > 1 &&
 			(mimeType == "video/vp8" || mimeType == "video/h264")
@@ -284,10 +293,12 @@ namespace mediasoupclient
 				encoding["scalabilityMode"] = "S1T3";
 			}
 		}
-
+    
+		//mediasoup的服务端并没有直接发送remote sdp，而是发送remote rtp parameters，在结合本地生成remote sdp
+		//根据answer端的参数，结合offer端的参数生产offser端的media sections
 		this->remoteSdp->Send(
 		  offerMediaObject,
-		  mediaSectionIdx.reuseMid,
+		  mediaSectionIdx.reuseMid/* 引用传参，如果为空则新建 */,
 		  sendingRtpParameters,
 		  this->sendingRemoteRtpParametersByKind[track->kind()],
 		  codecOptions);
@@ -612,9 +623,9 @@ namespace mediasoupclient
 		auto answer         = this->pc->CreateAnswer(options);
 		auto localSdpObject = sdptransform::parse(answer);
 		auto mediaIt        = find_if(
-      localSdpObject["media"].begin(), localSdpObject["media"].end(), [&localId](const json& m) {
-        return m["mid"].get<std::string>() == localId;
-      });
+      	localSdpObject["media"].begin(), localSdpObject["media"].end(), [&localId](const json& m) {
+        	return m["mid"].get<std::string>() == localId;
+      	});
 
 		auto& answerMediaObject = *mediaIt;
 

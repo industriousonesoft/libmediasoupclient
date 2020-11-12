@@ -34,6 +34,10 @@ namespace mediasoupclient
 		 * fields with default values.
 		 * It throws if invalid.
 		 */
+		/** 
+		 * 验证RtpCapabilities的有效性。如果检测到入参（引用类型）中存在缺失的字段将会以缺省值补全。
+		 * 有效性验证失败则会抛出异常
+		*/
 		void validateRtpCapabilities(json& caps)
 		{
 			MSC_TRACE();
@@ -44,11 +48,13 @@ namespace mediasoupclient
 			auto codecsIt           = caps.find("codecs");
 			auto headerExtensionsIt = caps.find("headerExtensions");
 
+			//codecs是可选字段，可以为空，如果不为空则必须是数组类型
 			// codecs is optional. If unset, fill with an empty array.
 			if (codecsIt != caps.end() && !codecsIt->is_array())
 			{
 				MSC_THROW_TYPE_ERROR("caps.codecs is not an array");
 			}
+			//如果codecs字段为空，则以空数组补全
 			else if (codecsIt == caps.end())
 			{
 				caps["codecs"] = json::array();
