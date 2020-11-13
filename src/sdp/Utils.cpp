@@ -468,20 +468,25 @@ namespace mediasoupclient
 				return encodings;
 			}
 
+			//offer端与answer端编码协商
 			void applyCodecParameters(const json& offerRtpParameters, json& answerMediaObject)
 			{
 				MSC_TRACE();
-
+				//以offer端编码为基准
 				for (const auto& codec : offerRtpParameters["codecs"])
 				{
+					//编码类型
 					auto mimeType = codec["mimeType"].get<std::string>();
-
+					//改为小写
 					std::transform(mimeType.begin(), mimeType.end(), mimeType.begin(), ::tolower);
 
 					// Avoid parsing codec parameters for unhandled codecs.
+					//只支持处理audio/opus这一编码类型，屏蔽其他编码类型的协商
+					//FIXME: 为什么只对audio/opus进行协商，是否或者如何可以添加其他的编码协商？
 					if (mimeType != "audio/opus")
 						continue;
 
+					//遍历rtp相关的属性集，找到rtp payload type相同的行
 					auto& rtps     = answerMediaObject["rtp"];
 					auto jsonRtpIt = find_if(rtps.begin(), rtps.end(), [&codec](const json& r) {
 						return r["payload"] == codec["payloadType"];
@@ -491,16 +496,20 @@ namespace mediasoupclient
 						continue;
 
 					// Just in case.
+					//确保a=fmtp: <payload type> <payload specific parameters> 属性行不为空
 					if (answerMediaObject.find("fmtp") == answerMediaObject.end())
 						answerMediaObject["fmtp"] = json::array();
 
+					//找到payload typed所在的fmtp行
 					auto& fmtps     = answerMediaObject["fmtp"];
 					auto jsonFmtpIt = find_if(fmtps.begin(), fmtps.end(), [&codec](const json& f) {
 						return f["payload"] == codec["payloadType"];
 					});
 
+					//如果未找到payload type所在的fmtp行，则新建
 					if (jsonFmtpIt == fmtps.end())
 					{
+						//config=payload specific parameters
 						json fmtp = { { "payload", codec["payloadType"] }, { "config", "" } };
 
 						answerMediaObject["fmtp"].push_back(fmtp);
@@ -508,12 +517,15 @@ namespace mediasoupclient
 					}
 
 					json& fmtp      = *jsonFmtpIt;
+					//payload specific parameters
 					json parameters = sdptransform::parseParams(fmtp["config"]);
 
+					//修改audio/opus对应的a=fmtp的参数
 					if (mimeType == "audio/opus")
 					{
+						//判断是否支持stereo
 						auto jsonSpropStereoIt = codec["parameters"].find("sprop-stereo");
-
+						//存在sprop-stereo字段，且是bool类型
 						if (jsonSpropStereoIt != codec["parameters"].end() && jsonSpropStereoIt->is_boolean())
 						{
 							auto spropStereo = jsonSpropStereoIt->get<bool>();
@@ -524,7 +536,7 @@ namespace mediasoupclient
 
 					// Write the codec fmtp.config back.
 					std::ostringstream config;
-
+					//fmtp parametes格式化
 					for (auto& item : parameters.items())
 					{
 						if (!config.str().empty())
@@ -539,7 +551,7 @@ namespace mediasoupclient
 						else if (item.value().is_number())
 							config << item.value().get<int>();
 					}
-
+					//更新fmtp的parameter
 					fmtp["config"] = config.str();
 				}
 			}

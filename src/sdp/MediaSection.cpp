@@ -125,7 +125,7 @@ namespace mediasoupclient
 			this->mediaObject.erase("extmapAllowMixed");
 		}
 
-        //Answer SDP中media流
+        //创建Answer SDP中media section
 		AnswerMediaSection::AnswerMediaSection(
 		  const json& iceParameters,
 		  const json& iceCandidates,
@@ -144,7 +144,7 @@ namespace mediasoupclient
 			//媒体流id
 			this->mediaObject["mid"]        = offerMediaObject["mid"];
 			this->mediaObject["type"]       = type;
-			//使用的协议簇
+			//同步offer端使用的协议簇
 			this->mediaObject["protocol"]   = offerMediaObject["protocol"];
 			//c=IN IP4 127.0.0.1
 			this->mediaObject["connection"] = { { "ip", "127.0.0.1" }, { "version", 4 } };
@@ -455,10 +455,11 @@ namespace mediasoupclient
 				this->mediaObject["setup"] = "actpass";
 		}
 
+		//创建offer sdp中的media secion
 		OfferMediaSection::OfferMediaSection(
 		  const json& iceParameters,
 		  const json& iceCandidates,
-		  const json& /*dtlsParameters*/,
+		  const json& /*dtlsParameters*/, //
 		  const json& sctpParameters,
 		  const std::string& mid,
 		  const std::string& kind,
@@ -481,6 +482,7 @@ namespace mediasoupclient
 			this->mediaObject["port"]       = 7;
 
 			// Set DTLS role.
+			//a=setup: actpass，表示Offer端即可以是连接发起端，也可以是接收端，根据Answer端的role做自适应，与其相反即可。
 			this->mediaObject["setup"] = "actpass";
 
 			if (kind == "audio" || kind == "video")
