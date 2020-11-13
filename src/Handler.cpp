@@ -235,7 +235,7 @@ namespace mediasoupclient
 		}
 
 		auto localSdp       = this->pc->GetLocalDescription();
-		//FIXME:SDP转ORTC？？
+		//FIXME:SDP字符串转对象化
 		auto localSdpObject = sdptransform::parse(localSdp);
 
 		//media流参数合集
@@ -662,7 +662,7 @@ namespace mediasoupclient
 		//获得更新后的webrtc sdp
 		answer = sdptransform::write(localSdpObject);
 
-		//因为是receier端，因此属于client，主动发送数据连接请求
+		//因为是receiver端，因此属于client，主动发送数据连接请求
 		if (!this->transportReady)
 			this->SetupTransport("client", localSdpObject);
 
