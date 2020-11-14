@@ -36,7 +36,7 @@ namespace mediasoupclient
 				//component = 1 表示Candidate用于RTP，component = 2表示Candidate用于RTCP
 				//因为mediasoup采用rtp+rtcp复用一个通道，所以component=1
 				candidateObject["component"]  = 1;
-				//foundation可以理解为candidate的Id，如果两个candidate使用同样的传输协议，比如都是UDP，拥有相同的type，比如都是srflx，host的IP地址相同且端口不同，在STUN和TURN服务器中捕获的IP地址相同
+				//foundation可以理解为candidate的Id，如果两个candidate使用同样的传输协议，比如都是UDP，拥有相同的type，比如都是srflx，host的IP地址相同且端口不同，在STUN和TURN服务器中捕获的IP地址相同，那么e二者的foundation值相同
 				//详见：https://tools.ietf.org/html/draft-ietf-ice-rfc5245bis-00#section-4.1.1.3
 				candidateObject["foundation"] = candidate["foundation"];
 				//candidate的ip地址
@@ -175,7 +175,7 @@ namespace mediasoupclient
 				this->mediaObject["fmtp"]      = json::array();
 
 				//SDP格式化：接收端支持的音视频编码格式参数集合
-				for (auto& codec : answerRtpParameters[ƒ])
+				for (auto& codec : answerRtpParameters["codecs"])
 				{
 					// clang-format off
 					//a=rtpmap:<payload type> <encoding name>/<clock rate> [/<encoding parameters>]
@@ -332,7 +332,7 @@ namespace mediasoupclient
 							});
 						// clang-format on
 					}
-				}// end of for answerRtpParameters
+				}// end of for answerRtpParameters["codecs"]
 
 				std::string payloads;
 				//汇总offer端支持的所有payload类型
