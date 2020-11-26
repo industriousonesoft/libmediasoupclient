@@ -59,9 +59,10 @@ namespace mediasoupclient
 		// clang-format on
 
 		// If ICE parameters are given, add ICE-Lite indicator.
-		//ICE模式分为Full ICE和Lite ICE，详见https://tools.ietf.org/html/rfc5245#section-2.7
-		//Full ICE：通信双方都要进行连通性检查，完整的走一遍流程
-		//Lite ICE: 只需要Full ICE一方进行连通性检查，Lite一方只需要回应responese消息。这种模式对于部署在公网的设备比较常用
+		// ICE模式分为Full ICE和Lite ICE，详见https://tools.ietf.org/html/rfc5245#section-2.7
+		// Full ICE：通信双方都要进行连通性检查，完整的走一遍流程
+		// Lite ICE: 只需要Full
+		// ICE一方进行连通性检查，Lite一方只需要回应responese消息。这种模式对于部署在公网的设备比较常用
 		if (this->iceParameters.find("iceLite") != this->iceParameters.end())
 			this->sdpObject["icelite"] = "ice-lite";
 
@@ -132,12 +133,12 @@ namespace mediasoupclient
 
 		if (iceParameters.find("iceLite") != iceParameters.end())
 			sdpObject["icelite"] = "ice-lite";
-		
+
 		for (auto idx{ 0u }; idx < this->mediaSections.size(); ++idx)
 		{
 			auto* mediaSection = this->mediaSections[idx];
 
-			//更新media stream中的角色屬性： a=setup: <role> 
+			//更新media stream中的角色屬性： a=setup: <role>
 			//詳見：https://tools.ietf.org/html/rfc4145#section-4
 			mediaSection->SetDtlsRole(role);
 

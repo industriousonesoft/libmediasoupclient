@@ -6,6 +6,7 @@
 #include "Utils.hpp"
 #include <algorithm> // ::transform
 #include <cctype>    // ::tolower
+#include <iostream>
 #include <list>
 #include <map>
 #include <set>
@@ -468,7 +469,7 @@ namespace mediasoupclient
 				return encodings;
 			}
 
-			//offer端与answer端编码协商
+			// offer端与answer端编码协商
 			void applyCodecParameters(const json& offerRtpParameters, json& answerMediaObject)
 			{
 				MSC_TRACE();
@@ -482,7 +483,7 @@ namespace mediasoupclient
 
 					// Avoid parsing codec parameters for unhandled codecs.
 					//只支持处理audio/opus这一编码类型，屏蔽其他编码类型的协商
-					//FIXME: 为什么只对audio/opus进行协商，是否或者如何可以添加其他的编码协商？
+					// FIXME: 为什么只对audio/opus进行协商，是否或者如何可以添加其他的编码协商？
 					if (mimeType != "audio/opus")
 						continue;
 
@@ -509,15 +510,15 @@ namespace mediasoupclient
 					//如果未找到payload type所在的fmtp行，则新建
 					if (jsonFmtpIt == fmtps.end())
 					{
-						//config=payload specific parameters
+						// config=payload specific parameters
 						json fmtp = { { "payload", codec["payloadType"] }, { "config", "" } };
 
 						answerMediaObject["fmtp"].push_back(fmtp);
 						jsonFmtpIt = answerMediaObject["fmtp"].end() - 1;
 					}
 
-					json& fmtp      = *jsonFmtpIt;
-					//payload specific parameters
+					json& fmtp = *jsonFmtpIt;
+					// payload specific parameters
 					json parameters = sdptransform::parseParams(fmtp["config"]);
 
 					//修改audio/opus对应的a=fmtp的参数
@@ -525,10 +526,10 @@ namespace mediasoupclient
 					{
 						//判断是否支持stereo
 						auto jsonSpropStereoIt = codec["parameters"].find("sprop-stereo");
-						//存在sprop-stereo字段，且是bool类型
-						if (jsonSpropStereoIt != codec["parameters"].end() && jsonSpropStereoIt->is_boolean())
+						//存在sprop-stereo字段，而且是int类型
+						if (jsonSpropStereoIt != codec["parameters"].end() && jsonSpropStereoIt->is_number_integer())
 						{
-							auto spropStereo = jsonSpropStereoIt->get<bool>();
+							auto spropStereo = jsonSpropStereoIt->get<int>() > 0;
 
 							parameters["stereo"] = spropStereo ? 1 : 0;
 						}
@@ -536,7 +537,7 @@ namespace mediasoupclient
 
 					// Write the codec fmtp.config back.
 					std::ostringstream config;
-					//fmtp parametes格式化
+					// fmtp parametes格式化
 					for (auto& item : parameters.items())
 					{
 						if (!config.str().empty())
