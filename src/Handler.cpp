@@ -189,12 +189,12 @@ namespace mediasoupclient
 
 		if (encodings && !encodings->empty())
 			transceiverInit.send_encodings = *encodings;
-		
+
 		webrtc::RtpTransceiverInterface* transceiver = this->pc->AddTransceiver(track, transceiverInit);
 
 		if (!transceiver)
 			MSC_THROW_ERROR("error creating transceiver");
-		//send端的transceiver只发送不接收
+		// send端的transceiver只发送不接收
 		transceiver->SetDirectionWithError(webrtc::RtpTransceiverDirection::kSendOnly);
 
 		std::string offer;
@@ -212,7 +212,7 @@ namespace mediasoupclient
 			// Transport is not ready.
 			//由于在SFU模式下，远端SFU服务器将自己伪装成peer。所以相对于当前的数据发送端而言，远端服务器的角色则是数据接收端client，因此设置发送端的角色则是server(音视频数据的server)
 			if (!this->transportReady)
-				//sserver表示是DTLS连接的被动接收端，反正client端则是DTLS连接的主动建立端
+				// sserver表示是DTLS连接的被动接收端，反正client端则是DTLS连接的主动建立端
 				this->SetupTransport("server", localSdpObject);
 
 			MSC_DEBUG("calling pc->SetLocalDescription():\n%s", offer.c_str());
@@ -234,11 +234,11 @@ namespace mediasoupclient
 			throw;
 		}
 
-		auto localSdp       = this->pc->GetLocalDescription();
-		//FIXME:SDP字符串转对象化
+		auto localSdp = this->pc->GetLocalDescription();
+		// FIXME:SDP字符串转对象化
 		auto localSdpObject = sdptransform::parse(localSdp);
 
-		//media流参数合集
+		// media流参数合集
 		json& offerMediaObject = localSdpObject["media"][mediaSectionIdx.idx];
 
 		// Set RTCP CNAME.
@@ -293,12 +293,12 @@ namespace mediasoupclient
 				encoding["scalabilityMode"] = "S1T3";
 			}
 		}
-    
-		//mediasoup的服务端并没有直接发送remote sdp，而是发送remote rtp parameters，在结合本地生成remote sdp
-		//根据answer端的参数，结合offer端的参数生产offser端的media sections
-		this->remoteSdp->Send(
+
+		// mediasoup的服务端并没有直接发送remote sdp，而是发送remote rtp
+		// parameters。通过remoteSdp与本地offer编码参数协商，最终得到webrtc sdp格式的answer
+		this->remoteSdp->CreateAnswer(
 		  offerMediaObject,
-		  mediaSectionIdx.reuseMid/* 引用传参，如果为空则新建 */,
+		  mediaSectionIdx.reuseMid /* 引用传参，如果为空则新建 */,
 		  sendingRtpParameters,
 		  this->sendingRemoteRtpParametersByKind[track->kind()],
 		  codecOptions);
@@ -326,10 +326,10 @@ namespace mediasoupclient
 	{
 		MSC_TRACE();
 
-		//DataChannel采用的是sctp协议，一种面向消息（以字节为单位，而非bit）的协议，提供了可靠、高效、有序的数据传输协议，同tcp和udp类似，都是基于IP协议，详见：https://tools.ietf.org/html/rfc4960
+		// DataChannel采用的是sctp协议，一种面向消息（以字节为单位，而非bit）的协议，提供了可靠、高效、有序的数据传输协议，同tcp和udp类似，都是基于IP协议，详见：https://tools.ietf.org/html/rfc4960
 		//获得下一个可用的stream id
 		uint16_t streamId = this->nextSendSctpStreamId;
-		//stcp连接过程中需要协商
+		// stcp连接过程中需要协商
 		dataChannelInit.negotiated = true;
 		dataChannelInit.id         = streamId;
 
@@ -346,7 +346,7 @@ namespace mediasoupclient
 		//丢包之前重发的时效性的上限值，超过这个时限将视为丢包，不再重发
 		if (dataChannelInit.maxRetransmitTime.has_value())
 		{
-			//In milliseconds
+			// In milliseconds
 			sctpStreamParameters["maxPacketLifeTime"] = dataChannelInit.maxRetransmitTime.value();
 		}
 		//丢包之前重发次数的最大值
@@ -359,7 +359,7 @@ namespace mediasoupclient
 		//验证sctpStreamParameters的有效性，用缺省值补全未设置的字段
 		ortc::validateSctpStreamParameters(sctpStreamParameters);
 
-		//WebRTC创建DataChannel
+		// WebRTC创建DataChannel
 		rtc::scoped_refptr<webrtc::DataChannelInterface> webrtcDataChannel =
 		  this->pc->CreateDataChannel(label, &dataChannelInit);
 
@@ -373,13 +373,15 @@ namespace mediasoupclient
 		{
 			webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
 			//获取webrtc offer sdp
-			std::string offer   = this->pc->CreateOffer(options);
-			//sdp字符串字典对象化
+			std::string offer = this->pc->CreateOffer(options);
+			// sdp字符串字典对象化
 			auto localSdpObject = sdptransform::parse(offer);
-			//application section也属于media section的一种
-			const Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx = this->remoteSdp->GetNextMediaSectionIdx();
+			// application section也属于media section的一种
+			const Sdp::RemoteSdp::MediaSectionIdx mediaSectionIdx =
+			  this->remoteSdp->GetNextMediaSectionIdx();
 			//获取webrtc offer sdp中的application section
-			auto offerMediaObject = find_if(localSdpObject["media"].begin(), localSdpObject["media"].end(), [](const json& m) {
+			auto offerMediaObject =
+			  find_if(localSdpObject["media"].begin(), localSdpObject["media"].end(), [](const json& m) {
 				  return m.at("type").get<std::string>() == "application";
 			  });
 
@@ -399,7 +401,7 @@ namespace mediasoupclient
 			MSC_DEBUG("calling pc.setLocalDescription() [offer:%s]", offer.c_str());
 
 			this->pc->SetLocalDescription(PeerConnection::SdpType::OFFER, offer);
-			//Answer sdp关联offer sdp中的application section
+			// Answer sdp关联offer sdp中的application section
 			this->remoteSdp->SendSctpAssociation(*offerMediaObject);
 			//获取更新后的anser sdp
 			auto sdpAnswer = this->remoteSdp->GetSdp();
@@ -431,17 +433,19 @@ namespace mediasoupclient
 		if (locaIdIt == this->mapMidTransceiver.end())
 			MSC_THROW_ERROR("associated RtpTransceiver not found");
 
-		//locaIdIt->first是localId
+		// locaIdIt->first是localId
 		auto* transceiver = locaIdIt->second;
 
-		//transceiver清空发送端的（音频或视频）数据源(MediaStreamTrackInterface)
+		// transceiver清空发送端的（音频或视频）数据源(MediaStreamTrackInterface)
 		transceiver->sender()->SetTrack(nullptr);
-		//pc移除发送track(RtpSenderInterface)
+		// pc移除发送track(RtpSenderInterface)
 		this->pc->RemoveTrack(transceiver->sender());
 		//远端SPD关闭对应的media sction
 		this->remoteSdp->CloseMediaSection(transceiver->mid().value());
 
-		//FIXME: 在pc移除sender后，获得更新后的offer，此时的offer已经不具备localId对应的media的发送能力，因此在SetLocalDescription时，对应的底层udp transports也会被移除?
+		// FIXME:
+		// 在pc移除sender后，获得更新后的offer，此时的offer已经不具备localId对应的media的发送能力，因此在SetLocalDescription时，对应的底层udp
+		// transports也会被移除?
 		// May throw.
 		webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
 		auto offer = this->pc->CreateOffer(options);
@@ -494,8 +498,8 @@ namespace mediasoupclient
 			MSC_THROW_ERROR("associated RtpTransceiver not found");
 
 		auto* transceiver = localIdIt->second;
-		//RtpParameters，详见：https://webrtc.googlesource.com/src/+/master/api/rtp_parameters.h
-		auto parameters   = transceiver->sender()->GetParameters();
+		// RtpParameters，详见：https://webrtc.googlesource.com/src/+/master/api/rtp_parameters.h
+		auto parameters = transceiver->sender()->GetParameters();
 
 		bool hasLowEncoding{ false };
 		bool hasMediumEncoding{ false };
@@ -508,7 +512,7 @@ namespace mediasoupclient
 		{
 			hasLowEncoding = true;
 			//引用赋值，等价于创建别称
-			lowEncoding    = &parameters.encodings[0];
+			lowEncoding = &parameters.encodings[0];
 		}
 
 		if (parameters.encodings.size() > 1)
@@ -634,7 +638,7 @@ namespace mediasoupclient
 		const auto& cname = (*rtpParameters)["rtcp"]["cname"];
 
 		//更新远端sdp: offer sdp，此时远端是offer，本地是answer
-		this->remoteSdp->Receive(localId, kind, *rtpParameters, cname, id);
+		this->remoteSdp->CreateOffer(localId, kind, *rtpParameters, cname, id);
 		auto offer = this->remoteSdp->GetSdp();
 
 		MSC_DEBUG("calling pc->setRemoteDescription():\n%s", offer.c_str());
@@ -649,9 +653,9 @@ namespace mediasoupclient
 		auto answer         = this->pc->CreateAnswer(options);
 		auto localSdpObject = sdptransform::parse(answer);
 		auto mediaIt        = find_if(
-      	localSdpObject["media"].begin(), localSdpObject["media"].end(), [&localId](const json& m) {
-        	return m["mid"].get<std::string>() == localId;
-      	});
+      localSdpObject["media"].begin(), localSdpObject["media"].end(), [&localId](const json& m) {
+        return m["mid"].get<std::string>() == localId;
+      });
 
 		auto& answerMediaObject = *mediaIt;
 
@@ -672,7 +676,7 @@ namespace mediasoupclient
 		//更新本地的sdp: answer sdp
 		this->pc->SetLocalDescription(PeerConnection::SdpType::ANSWER, answer);
 
-		//获得对应的Transceiver，不需要创建（由offer端发送创建）
+		//获得对应的Transceiver，不需要主动创建，webrtc内部在响应offer sdp时创建
 		auto transceivers  = this->pc->GetTransceivers();
 		auto transceiverIt = std::find_if(
 		  transceivers.begin(), transceivers.end(), [&localId](webrtc::RtpTransceiverInterface* t) {
@@ -702,7 +706,7 @@ namespace mediasoupclient
 		MSC_TRACE();
 
 		uint16_t streamId = this->nextSendSctpStreamId;
-		
+
 		dataChannelInit.negotiated = true;
 		dataChannelInit.id         = streamId;
 

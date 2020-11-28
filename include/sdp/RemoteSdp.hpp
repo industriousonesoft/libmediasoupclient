@@ -28,7 +28,7 @@ namespace mediasoupclient
 
 		public:
 			Sdp::RemoteSdp::MediaSectionIdx GetNextMediaSectionIdx();
-			void Send(
+			void CreateAnswer(
 			  nlohmann::json& offerMediaObject,
 			  const std::string& reuseMid,
 			  nlohmann::json& offerRtpParameters,
@@ -38,7 +38,7 @@ namespace mediasoupclient
 			void SendSctpAssociation(nlohmann::json& offerMediaObject);
 			void RecvSctpAssociation();
 
-			void Receive(
+			void CreateOffer(
 			  const std::string& mid,
 			  const std::string& kind,
 			  const nlohmann::json& offerRtpParameters,

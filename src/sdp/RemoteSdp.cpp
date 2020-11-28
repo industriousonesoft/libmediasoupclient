@@ -166,7 +166,7 @@ namespace mediasoupclient
 		return { this->mediaSections.size() };
 	}
 
-	void Sdp::RemoteSdp::Send(
+	void Sdp::RemoteSdp::CreateAnswer(
 	  json& offerMediaObject,
 	  const std::string& reuseMid,
 	  json& offerRtpParameters,
@@ -231,7 +231,7 @@ namespace mediasoupclient
 		this->AddMediaSection(mediaSection);
 	}
 
-	void Sdp::RemoteSdp::Receive(
+	void Sdp::RemoteSdp::CreateOffer(
 	  const std::string& mid,
 	  const std::string& kind,
 	  const json& offerRtpParameters,
