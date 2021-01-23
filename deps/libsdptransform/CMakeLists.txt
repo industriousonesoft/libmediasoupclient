@@ -40,5 +40,5 @@ target_include_directories(${PROJECT_NAME} PUBLIC
  	"${LIBJSON_INCLUDE_PATH}"
  )
 
-install(TARGETS sdptransform DESTINATION lib)
+install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 install(FILES ${HEADER_FILES} DESTINATION include/sdptransform)

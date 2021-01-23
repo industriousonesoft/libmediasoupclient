@@ -148,5 +148,5 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 	$<$<PLATFORM_ID:Darwin>:WEBRTC_MAC>
 )
 
-install(TARGETS mediasoupclient DESTINATION lib)
-install(FILES ${HEADER_FILES} DESTINATION include/mediasoupclient)
+install(TARGETS ${PROJECT_NAME} DESTINATION lib)
+install(FILES ${HEADER_FILES} DESTINATION include/${PROJECT_NAME})
