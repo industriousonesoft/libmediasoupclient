@@ -34,6 +34,8 @@ set(
 	#deps/json/include/nlohmann/json.hpp #改为LIBJSON_INCLUDE_PATH
 )
 
+assign_source_group(${SOURCE_FILES})
+
 add_library(sdptransform STATIC ${SOURCE_FILES} ${HEADER_FILES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC

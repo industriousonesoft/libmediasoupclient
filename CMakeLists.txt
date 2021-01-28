@@ -97,6 +97,8 @@ set(
 	include/sdp/Utils.hpp
 )
 
+assign_source_group(${SOURCE_FILES})
+
 # Create target.
 add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES})
 
